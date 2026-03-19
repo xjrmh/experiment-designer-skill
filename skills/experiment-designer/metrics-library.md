@@ -74,3 +74,60 @@ If a user provides a percentage (e.g. "5%") for a binary metric, convert to deci
 | Optimize content | CTR | Bounce Rate, Revenue per User |
 | Reduce friction | Signup Rate or Conversion Rate | Page Load Time, Error Count |
 | Improve retention | Retention Rate (7-day) | Revenue per User, Error Count |
+| Compare ranking systems | Win Rate (interleaving) | Latency, Coverage, Error Count |
+
+## Ratio Metrics
+
+Some key metrics are ratios (numerator/denominator). These require special variance estimation — see [statistics.md](statistics.md) for delta method and linearization formulas.
+
+| Metric | Numerator | Denominator | Typical Category | Direction | Typical Baseline |
+|--------|-----------|-------------|-----------------|-----------|-----------------|
+| Revenue per Session | Total revenue | Sessions | PRIMARY | INCREASE | $2-$15 |
+| Clicks per Impression | Clicks | Impressions | PRIMARY | INCREASE | 0.01-0.05 |
+| Add-to-Cart per Visit | Add-to-cart events | Visits | PRIMARY | INCREASE | 0.05-0.15 |
+| Orders per Visit | Orders | Visits | PRIMARY | INCREASE | 0.01-0.05 |
+
+## Industry-Specific Baselines
+
+Metric baselines vary significantly by industry. Use these ranges as starting points and adjust to your actual data.
+
+### E-Commerce
+| Metric | Typical Baseline | Notes |
+|--------|-----------------|-------|
+| Conversion Rate | 0.02-0.04 (2-4%) | Desktop higher than mobile |
+| Average Order Value | $50-$150 | Varies by product category |
+| Cart Abandonment | 0.65-0.75 (65-75%) | Industry standard is high |
+| Revenue per User | $1-$10 | Heavily skewed distribution |
+
+### SaaS / B2B
+| Metric | Typical Baseline | Notes |
+|--------|-----------------|-------|
+| Free Trial Conversion | 0.05-0.15 (5-15%) | Depends on trial length |
+| Activation Rate | 0.20-0.40 (20-40%) | Users completing key action |
+| Feature Adoption | 0.10-0.30 (10-30%) | Users engaging with a feature |
+| Churn Rate (monthly) | 0.03-0.08 (3-8%) | Lower is better |
+
+### Marketplace / Two-Sided
+| Metric | Typical Baseline | Notes |
+|--------|-----------------|-------|
+| Booking/Order Rate | 0.05-0.15 (5-15%) | Search to booking |
+| Supply Utilization | 0.40-0.70 (40-70%) | % of supply being used |
+| Match Rate | 0.30-0.60 (30-60%) | Successful matches |
+| Take Rate | 0.10-0.25 (10-25%) | Platform commission |
+
+### Content / Media
+| Metric | Typical Baseline | Notes |
+|--------|-----------------|-------|
+| CTR | 0.01-0.05 (1-5%) | Varies by placement |
+| Time on Content | 30-120s | Article/video engagement |
+| Scroll Depth | 0.40-0.60 (40-60%) | % of page scrolled |
+| Share Rate | 0.001-0.01 (0.1-1%) | Very low for most content |
+
+### Fintech
+| Metric | Typical Baseline | Notes |
+|--------|-----------------|-------|
+| Application Completion | 0.30-0.60 (30-60%) | Form completion rate |
+| Approval Rate | 0.40-0.70 (40-70%) | Depends on risk tolerance |
+| Funding Rate | 0.60-0.85 (60-85%) | Approved users completing funding |
+| DAU/MAU | 0.10-0.30 (10-30%) | User stickiness |
+

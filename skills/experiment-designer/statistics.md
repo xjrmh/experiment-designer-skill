@@ -168,3 +168,172 @@ If achievable MDE > target MDE, the experiment is not feasible with current traf
 | MDE | 5% relative | Smallest change worth detecting |
 | Traffic allocation | 50/50 | Balanced split is most efficient |
 | Variants | 2 | Control + treatment |
+
+## One-Sided Tests
+
+All formulas above assume two-tailed tests. For one-sided tests (directional hypothesis), use `z_alpha = Z(1 - alpha)` instead of `z_alpha = Z(1 - alpha/2)`.
+
+```
+Two-tailed (default): z_alpha = Z(1 - 0.05/2) = Z(0.975) = 1.96
+One-sided:            z_alpha = Z(1 - 0.05)   = Z(0.95)  = 1.645
+```
+
+**When one-sided is appropriate**:
+- You have a strong directional hypothesis (e.g. "new checkout flow will increase conversion, not decrease it")
+- You only care about detecting an effect in one direction
+- You will NOT act differently if the effect is in the opposite direction
+
+**When to stick with two-tailed (default)**:
+- You want to detect effects in either direction
+- A negative result would also be actionable (e.g. you'd kill the experiment)
+- You are unsure about the direction of the effect
+- Regulatory or organizational standards require two-tailed tests
+
+**Impact**: One-sided tests require ~20% smaller sample size than two-tailed for the same alpha and power.
+
+## Ratio Metrics
+
+Many important metrics are ratios: revenue per session, clicks per impression, orders per visit. Standard formulas assume independent observations, but ratio metrics have correlated numerator and denominator.
+
+### Delta Method (Recommended)
+For a ratio metric Y/X where Y = numerator (e.g. revenue) and X = denominator (e.g. sessions):
+```
+ratio = mean(Y) / mean(X)
+
+variance_ratio = (1 / mean(X)^2) * (var(Y) + ratio^2 * var(X) - 2 * ratio * cov(Y, X))
+```
+
+Use `variance_ratio` in place of `variance` in the continuous metric sample size formula.
+
+### Linearization (Alternative)
+Transform the ratio into a per-user metric:
+```
+linearized_i = Y_i - ratio * X_i
+```
+Then compute sample size using `var(linearized)` as the variance. This is equivalent to the delta method but easier to implement in practice.
+
+### Bootstrap (When Delta Method Assumptions Fail)
+If the ratio distribution is highly skewed or has heavy tails, use bootstrap to estimate variance:
+1. Resample users with replacement (1,000+ iterations)
+2. Compute the ratio metric for each bootstrap sample
+3. Use the bootstrap variance in the sample size formula
+
+**Warning**: Using `var(Y_i / X_i)` (variance of per-user ratios) is incorrect when users have different numbers of observations. Always use the delta method or linearization.
+
+## Group Sequential Testing
+
+### Alpha-Spending Boundaries
+
+For group sequential designs with K planned looks:
+
+**O'Brien-Fleming boundaries** (approximate):
+```
+z_k = z_K / sqrt(t_k)
+where t_k = k/K (information fraction at look k)
+      z_K ≈ z_alpha for the final look
+```
+
+Example (K=4, alpha=0.05, two-sided):
+```
+| Look | t_k  | z_k   | p_k     |
+|------|------|-------|---------|
+| 1    | 0.25 | 4.049 | 0.00005 |
+| 2    | 0.50 | 2.863 | 0.0042  |
+| 3    | 0.75 | 2.337 | 0.0194  |
+| 4    | 1.00 | 2.024 | 0.0430  |
+```
+
+**Pocock boundaries** (K=4, alpha=0.05):
+```
+z_k = 2.361 for all k
+p_k = 0.0182 for all k
+```
+
+### Maximum Sample Size Inflation
+
+```
+n_max = n_fixed * inflation_factor
+
+| K | OBF     | Pocock  |
+|---|---------|---------|
+| 2 | 1.014   | 1.101   |
+| 3 | 1.022   | 1.166   |
+| 4 | 1.027   | 1.211   |
+| 5 | 1.031   | 1.244   |
+```
+
+### Futility Boundaries
+
+Non-binding futility using conditional power:
+```
+conditional_power = 1 - Phi(z_final - z_current * sqrt(t_max / t_current))
+Stop for futility if conditional_power < 0.20
+```
+
+### Interleaving Sample Size
+
+For interleaving experiments comparing two ranking systems:
+```
+n = (z_alpha + z_beta)^2 / (2 * (target_win_rate - 0.50)^2)
+
+where target_win_rate = expected win rate for the better system (typically 0.51-0.55)
+      baseline = 0.50 (equal preference)
+```
+This uses the binary metric formula with baseline p = 0.50 and effect size = (target - 0.50).
+
+## Choosing MDE (Minimum Detectable Effect)
+
+MDE is the hardest parameter for most users. Use this framework:
+
+### Business Impact Approach
+1. **Calculate the revenue impact**: If the metric moves by X%, what is the annual revenue/business impact?
+2. **Set MDE to the smallest X% where the impact justifies the cost** of building, maintaining, and running the experiment.
+3. Example: If 1% conversion lift = $500K/year in revenue, and the feature costs $100K to build, then an MDE of 1% is justified.
+
+### Historical Approach
+1. **Look at past experiments**: What effect sizes have similar experiments detected?
+2. **Use the median observed effect** as a realistic MDE. Most experiments see 1-5% relative lifts.
+3. If past experiments in this area typically show 2-3% lifts, set MDE to ~2%.
+
+### Practical Rules of Thumb
+
+| Experiment type | Typical MDE range | Notes |
+|----------------|-------------------|-------|
+| UI/UX changes | 2-5% relative | Small visual changes rarely move metrics by >5% |
+| New features | 5-15% relative | Significant changes can have larger effects |
+| Algorithm changes | 1-3% relative | Algorithmic improvements are often small but valuable |
+| Pricing changes | 5-20% relative | Pricing has large but uncertain effects |
+| Content optimization | 10-30% relative | Content variations can have wide effect ranges |
+
+### Feasibility Check
+If the calculated duration is too long for your target MDE:
+- Can you **accept a larger MDE**? (detect only large effects)
+- Can you **increase traffic allocation**? (more users in the experiment)
+- Can you **use variance reduction** (CUPED)? (reduce required n by 20-50%)
+- Can you **use a more sensitive design**? (interleaving for ranking, sequential for early stopping)
+
+## Effect Size Interpretation
+
+### Cohen's Conventions
+| Effect size (Cohen's d) | Interpretation | Example |
+|------------------------|----------------|---------|
+| 0.01-0.2 | Very small to small | Typical UI tweaks, minor copy changes |
+| 0.2-0.5 | Small to medium | Feature redesigns, algorithmic improvements |
+| 0.5-0.8 | Medium to large | Major product changes, new features |
+| > 0.8 | Large | Fundamental changes, pricing overhauls |
+
+### Computing Cohen's d
+```
+d = (mean_treatment - mean_control) / pooled_sd
+pooled_sd = sqrt((sd_treatment^2 + sd_control^2) / 2)
+```
+
+### Practical vs Statistical Significance
+
+A result can be:
+- **Statistically significant AND practically significant**: Ship it ✓
+- **Statistically significant but NOT practically significant**: Effect is real but too small to matter. Consider: is the implementation cost worth a 0.1% lift?
+- **Not statistically significant but potentially practically significant**: Underpowered experiment. Consider: extend the experiment, increase traffic, or use variance reduction.
+- **Neither**: No evidence of a meaningful effect. Kill it ✗
+
+Always report confidence intervals alongside p-values. A 95% CI of [0.1%, 5.2%] is much more informative than "p < 0.05".
