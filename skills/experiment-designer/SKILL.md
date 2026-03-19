@@ -46,11 +46,15 @@ Configure and calculate sample size:
 - **Daily traffic**: Estimated users/day entering the experiment
 - **Traffic allocation**: e.g. 50/50 for A/B, 25/25/25/25 for 2x2 factorial
 
+For **factorial designs**, ask explicitly: "Do you need to detect **interaction effects** between factors, or only main effects?" This choice inflates sample size ~4x per cell when detecting interactions.
+
 Calculate sample size using the formulas in [statistics.md](statistics.md) and estimate experiment duration:
 ```
 duration_days = ceil(total_sample_size / (daily_traffic * allocation_pct))
 ```
 Minimum recommended duration is 7 days to capture weekly patterns.
+
+**Feasibility check**: If duration > 90 days, warn the user and suggest alternatives: increase MDE (detect only larger effects), increase traffic allocation, reduce number of variants, or consider a different experiment type. Use the MDE feasibility formula in [statistics.md](statistics.md) to show what effect size is detectable within a reasonable timeframe.
 
 ### Step 4: Randomization Strategy
 
@@ -80,7 +84,7 @@ Skip for MAB experiments (adaptive nature handles this). Impact order: CUPED > S
 
 Evaluate and document:
 - **Risk level**: LOW (minor impact, well-understood) / MEDIUM (moderate impact, some uncertainty) / HIGH (significant impact, novel treatment)
-- **Blast radius**: % of users affected (0-100%)
+- **Blast radius**: % of total user base exposed to a potentially negative treatment. This is `traffic_allocation_pct * feature_reach_pct / 100` — e.g. 50% traffic allocation on a feature used by 20% of users = 10% blast radius.
 - **Potential negative impacts**: List risks (performance, UX, revenue, compliance)
 - **Mitigation strategies**: Counter-measures for each risk
 - **Rollback triggers**: Specific metrics/thresholds that trigger rollback
@@ -88,7 +92,7 @@ Evaluate and document:
 
 **Pre-launch checklist** (all 5 required):
 1. Logging instrumented and verified
-2. AA test passed (no SRM in control vs control)
+2. AA test passed — run the experiment infrastructure with identical variants (control vs control) to verify no systematic bias in assignment. Check for SRM (Sample Ratio Mismatch): the observed traffic split should match the configured split (chi-squared test, p > 0.001).
 3. Monitoring alerts configured
 4. Rollback plan documented
 5. Stakeholder approval obtained
@@ -105,7 +109,7 @@ Type-specific checklist additions:
 Configure ongoing experiment monitoring:
 - **Refresh frequency**: How often to check metrics (default: every 60 minutes)
 - **SRM threshold**: p-value for Sample Ratio Mismatch detection (default: 0.001)
-- **Multiple testing correction**: NONE, BONFERRONI (conservative), BENJAMINI_HOCHBERG (balanced), HOLM
+- **Multiple testing correction**: NONE, BONFERRONI (conservative), BENJAMINI_HOCHBERG (balanced), HOLM. **Required** when testing >1 primary metric or comparing >2 variants. Recommend Benjamini-Hochberg as the default when correction is needed.
 
 **Stopping rules** (define at least one of each applicable type):
 - **SUCCESS**: Stop when primary metric reaches statistical significance

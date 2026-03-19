@@ -12,14 +12,26 @@ where p_pooled = (p1 + p2) / 2
       p1 = baseline rate (decimal, e.g. 0.05 for 5%)
       p2 = p1 + absolute effect size
 ```
+**Validation**: Both p1 and p2 must be in (0, 1). If a relative MDE pushes p2 outside this range, reduce the MDE or note that the effect size is unrealistic. For example, a 20% relative increase on a baseline of 0.90 gives p2 = 1.08, which is invalid.
 
 ### Continuous Metrics (Two-Sample T-Test)
 ```
 n = 2 * (z_alpha + z_beta)^2 * variance / effect_size^2
 
-where variance = sigma^2 (if not known, default: (baseline * 0.1)^2)
+where variance = sigma^2 (see typical CV table below if unknown)
       effect_size = baseline * (mde_pct / 100) for relative MDE
 ```
+**Variance estimation**: If variance is unknown, estimate using `variance = (baseline * CV)^2` where CV is the coefficient of variation. The old default of CV=10% is too low for most metrics. Use these typical values:
+
+| Metric type | Typical CV | Example |
+|-------------|-----------|---------|
+| Page load time, latency | 30-50% | 1500ms baseline → sd ~500-750ms |
+| Revenue per user | 80-150% | $50 baseline → sd ~$40-75 |
+| Session duration | 80-150% | 180s baseline → sd ~150-270s |
+| Engagement scores | 25-40% | 7.5 baseline → sd ~2-3 |
+| Order value | 40-60% | $75 baseline → sd ~$30-45 |
+
+**Warning**: Using a CV that is too low will dramatically underestimate the required sample size. When in doubt, use a higher CV or request actual variance from the user's data.
 
 ### Count Metrics (Poisson Approximation)
 ```
@@ -61,9 +73,9 @@ where m = average cluster size
 ### Switchback Autocorrelation
 For switchback experiments:
 ```
-effective_multiplier = (1 - rho) / (1 + rho)
-adjusted_n = ceil(n / effective_multiplier)
-effective_periods = floor(num_periods * effective_multiplier)
+inflation_factor = (1 + rho) / (1 - rho)
+adjusted_n = ceil(n * inflation_factor)
+effective_periods = floor(num_periods / inflation_factor)
 
 where rho = temporal autocorrelation (0 to 1)
 ```
@@ -105,13 +117,15 @@ Minimum recommended duration: **7 days** (to capture weekly patterns). Consider 
 
 Given available traffic and max duration, calculate the achievable MDE:
 ```
-available_n = daily_traffic * max_days
-achievable_mde = (z_alpha + z_beta) * sqrt(2 * variance / available_n)  # continuous
-achievable_mde = (z_alpha + z_beta) * sqrt(2 * p * (1-p) / available_n)  # binary
-achievable_mde = (z_alpha + z_beta) * sqrt(2 * lambda / available_n)     # count
+available_n_per_variant = daily_traffic * max_days * allocation_pct
+achievable_mde = (z_alpha + z_beta) * sqrt(2 * variance / available_n_per_variant)  # continuous
+achievable_mde = (z_alpha + z_beta) * sqrt(2 * p * (1-p) / available_n_per_variant)  # binary
+achievable_mde = (z_alpha + z_beta) * sqrt(2 * lambda / available_n_per_variant)     # count
+
+where allocation_pct = fraction of traffic in the smallest variant (e.g. 0.5 for 50/50)
 ```
 
-If achievable MDE > target MDE, the experiment is not feasible with current traffic.
+If achievable MDE > target MDE, the experiment is not feasible with current traffic. Suggest: increasing traffic allocation, extending max duration, or accepting a larger MDE.
 
 ## Common Warnings
 

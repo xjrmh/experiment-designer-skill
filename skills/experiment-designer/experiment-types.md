@@ -33,14 +33,20 @@
 **Randomization**: CLUSTER, RANDOM, consistent assignment.
 
 **Key parameters**:
-- **ICC (Intra-Cluster Correlation)**: Proportion of variance between clusters (typically 0.01-0.1)
+- **ICC (Intra-Cluster Correlation)**: Proportion of total variance that is between clusters (typically 0.01-0.1)
 - **Cluster size**: Average number of units per cluster
 - **Design Effect**: DEFF = 1 + (cluster_size - 1) x ICC. Inflates required sample size.
+
+**Estimating ICC**: If historical data is available, compute ICC = variance_between_clusters / (variance_between_clusters + variance_within_clusters) using a one-way ANOVA or mixed-effects model on the primary metric grouped by cluster. If no data is available, use these rough guides:
+- ICC ~0.01: Weak clustering (e.g. users in large cities)
+- ICC ~0.05: Moderate clustering (e.g. students in schools, customers in stores)
+- ICC ~0.10+: Strong clustering (e.g. patients in clinics, employees in small teams)
 
 **Warnings**:
 - Need at least 10 clusters per arm for reliable inference
 - Balance clusters in size for stable estimates
 - Larger ICC or cluster size = much larger sample sizes
+- With cluster_size=100 and ICC=0.1, DEFF=10.9 — sample size inflates ~11x
 
 ---
 
@@ -61,8 +67,10 @@
 **Key parameters**:
 - **Number of periods**: Minimum 4 recommended
 - **Period length**: Hours per switch (balance between more data and carryover risk)
-- **Autocorrelation (rho)**: 0 to 1. Higher rho reduces effective sample size.
-- **Effective multiplier**: (1 - rho) / (1 + rho). Applied to sample size.
+- **Autocorrelation (rho)**: 0 to 1. Higher rho inflates required sample size.
+- **Inflation factor**: (1 + rho) / (1 - rho). Multiplied into sample size.
+
+**Estimating rho**: Compute the lag-1 autocorrelation of the primary metric across consecutive time periods using historical data. If unavailable, use rho ~0.3-0.5 for most marketplace metrics (conservative). Lower values (~0.1) for metrics with high natural variability across periods.
 
 **Warnings**:
 - Assumes no carryover effects between periods
@@ -97,6 +105,12 @@
 - RDD: Sample size depends on bandwidth near threshold. Consult a statistician for bandwidth selection
 - PSM: Effective sample size depends on match quality and covariate overlap
 - IV: Weak instruments lead to biased estimates. Check first-stage F-statistic > 10
+
+**Verifying assumptions**:
+- **DiD — Parallel trends**: Plot the outcome for treatment and control groups over multiple pre-treatment periods. Trends should be visually parallel. Formally test with a placebo/pre-trend test (regress outcome on group x time interactions for pre-periods; coefficients should be non-significant).
+- **RDD — Continuity at threshold**: Check that covariates do not jump at the cutoff (McCrary density test). Plot the outcome against the running variable; there should be no manipulation of the running variable near the threshold.
+- **PSM — Overlap and no unmeasured confounders**: Check covariate balance after matching (standardized mean differences < 0.1). Overlap means both groups have similar propensity score distributions. The "no unmeasured confounders" assumption cannot be tested — argue it based on domain knowledge and conduct sensitivity analysis (e.g. Rosenbaum bounds).
+- **IV — Instrument validity**: Relevance: first-stage F-statistic > 10. Exclusion: argue that the instrument affects the outcome only through the treatment (untestable, domain-knowledge based). If multiple instruments, use the Sargan/Hansen overidentification test.
 
 ---
 
@@ -146,6 +160,14 @@
 - **Exploration rate (epsilon)**: 0 to 0.5. Higher = more exploration, slower convergence
 - **Exploration budget per arm**: (horizon x epsilon) / num_arms
 - **Estimated regret**: epsilon x horizon x (arms - 1) / arms
+
+**Choosing epsilon**:
+| Context | Recommended epsilon | Rationale |
+|---------|-------------------|-----------|
+| Revenue-critical (checkout, pricing) | 0.01-0.03 | Minimize regret on high-value actions |
+| Conversion funnels | 0.05 | Balance learning with conversion loss |
+| Content/recommendations | 0.10-0.15 | Content variety has value; lower cost of suboptimal choice |
+| Early exploration / cold start | 0.20-0.30 | Need data fast; accept short-term regret |
 
 **Notes**:
 - Traditional fixed-sample statistical testing does not apply

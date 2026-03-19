@@ -37,6 +37,18 @@ Baselines as average counts. Use Poisson approximation (variance = lambda = base
 | Error Count | GUARDRAIL | DECREASE | 0.1 | Errors encountered per user |
 | Feature Usage Count | SECONDARY | INCREASE | 2.5 | Times a feature is used per user |
 
+## Input Validation Rules
+
+Before calculating sample size, validate metric inputs:
+
+| Metric type | Baseline constraint | Additional checks |
+|-------------|-------------------|-------------------|
+| BINARY | Must be in (0, 1) exclusive — reject 0, 1, negatives, or values >1 | p2 = baseline + absolute_effect must also be in (0, 1) |
+| CONTINUOUS | Must be positive (or explicitly allow negative for delta metrics) | Variance/SD must be positive. If user provides CV, verify CV > 0 |
+| COUNT | Must be non-negative (>= 0) | Lambda = 0 is degenerate — warn if baseline count is 0 |
+
+If a user provides a percentage (e.g. "5%") for a binary metric, convert to decimal (0.05) before calculation.
+
 ## Choosing the Right Metric Type
 
 | If the metric is... | Use type | Baseline format |
