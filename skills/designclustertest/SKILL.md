@@ -55,9 +55,10 @@ total_clusters = clusters_per_arm * num_arms
 3. Verify `clusters_per_arm >= 10`. If not, warn that inference will be unreliable.
 4. Duration estimate:
 ```
-duration_days = ceil(adjusted_n * num_arms / (daily_traffic * allocation_pct))
+total_sample_size = adjusted_n * num_arms
+duration_days = ceil(total_sample_size / (daily_traffic * experiment_traffic_fraction))
 ```
-Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest alternatives.
+Where `experiment_traffic_fraction` = fraction of total traffic entering the experiment (1.0 if all traffic). Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest alternatives.
 
 **Warning**: With large cluster sizes or high ICC, DEFF can be very large. Example: cluster_size=100, ICC=0.1 gives DEFF=10.9 — nearly 11x the base sample size.
 

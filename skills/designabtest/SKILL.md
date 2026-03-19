@@ -54,9 +54,9 @@ n = 2 * (z_alpha + z_beta)^2 * lambda / effect_size^2
 
 Duration estimate:
 ```
-duration_days = ceil(total_sample_size / (daily_traffic * allocation_pct))
+duration_days = ceil(total_sample_size / (daily_traffic * experiment_traffic_fraction))
 ```
-Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest alternatives (increase MDE, increase traffic, reduce variants).
+Where `experiment_traffic_fraction` = fraction of total site traffic entering the experiment (1.0 if all eligible traffic is used, e.g. 0.5 if only half of users are eligible). Note: `total_sample_size` already includes all variants (e.g. 2n for a 50/50 A/B test). Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest alternatives (increase MDE, increase traffic, reduce variants).
 
 ### Step 3: Randomization Strategy
 
@@ -69,7 +69,7 @@ Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest al
 ### Step 4: Variance Reduction
 
 Recommend techniques to reduce required sample size:
-- **CUPED** (strongest): Use pre-experiment covariate correlated with the metric. Specify covariate name and expected variance reduction (0-70%). Works best with correlation >0.7.
+- **CUPED** (strongest): Use pre-experiment covariate correlated with the metric. Specify covariate name and expected variance reduction (typically 20-40%, up to 70% with highly correlated covariates). Works best with correlation >0.7.
 - **Post-stratification**: Stratify by variables like geography, device. Improves precision post-analysis.
 - **Blocking**: Divide population into homogeneous blocks, randomize within blocks.
 

@@ -65,9 +65,9 @@ See [statistics](../experiment-designer/statistics.md) for base sample size form
 
 Duration estimate:
 ```
-duration_days = ceil(total_n / (daily_traffic * (1 / total_cells)))
+duration_days = ceil(total_n / (daily_traffic * experiment_traffic_fraction))
 ```
-Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest reducing factors/levels or increasing MDE.
+Where `experiment_traffic_fraction` = fraction of total site traffic entering the experiment (1.0 if all traffic is used, lower if only a segment is eligible). Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest reducing factors/levels or increasing MDE.
 
 **Multiple testing**: With factorial designs, you are testing multiple hypotheses (one per factor + interactions). **Bonferroni or Benjamini-Hochberg correction is required.** Adjusted alpha = alpha / number_of_tests.
 

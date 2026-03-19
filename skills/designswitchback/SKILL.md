@@ -47,11 +47,15 @@ Configure and calculate sample size with switchback adjustment:
 ```
 inflation_factor = (1 + rho) / (1 - rho)
 adjusted_n = ceil(n * inflation_factor)
-effective_periods = floor(num_periods / inflation_factor)
+effective_periods = max(1, floor(num_periods / inflation_factor))
 ```
-3. Duration estimate:
+If effective_periods < 2, warn: "Not enough independent time units. Increase number of periods."
+
+3. Duration — both constraints must be met:
 ```
-duration_days = ceil(num_periods * period_length_hours / 24)
+duration_from_sample = ceil(adjusted_n * 2 / daily_traffic)
+duration_from_periods = ceil(num_periods * period_length_hours / 24)
+duration_days = max(duration_from_sample, duration_from_periods)
 ```
 Minimum recommended duration: 7 days to capture weekly patterns. If duration > 90 days, warn and suggest alternatives.
 

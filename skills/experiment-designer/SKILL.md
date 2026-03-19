@@ -50,9 +50,9 @@ For **factorial designs**, ask explicitly: "Do you need to detect **interaction 
 
 Calculate sample size using the formulas in [statistics.md](statistics.md) and estimate experiment duration:
 ```
-duration_days = ceil(total_sample_size / (daily_traffic * allocation_pct))
+duration_days = ceil(total_sample_size / (daily_traffic * experiment_traffic_fraction))
 ```
-Minimum recommended duration is 7 days to capture weekly patterns.
+Where `experiment_traffic_fraction` = fraction of total site traffic entering the experiment (1.0 if all eligible traffic is used). Minimum recommended duration is 7 days to capture weekly patterns.
 
 **Feasibility check**: If duration > 90 days, warn the user and suggest alternatives: increase MDE (detect only larger effects), increase traffic allocation, reduce number of variants, or consider a different experiment type. Use the MDE feasibility formula in [statistics.md](statistics.md) to show what effect size is detectable within a reasonable timeframe.
 
@@ -73,7 +73,7 @@ Recommend based on experiment type:
 ### Step 5: Variance Reduction
 
 Recommend techniques to reduce required sample size:
-- **CUPED** (strongest): Use pre-experiment covariate correlated with the metric. Specify covariate name and expected variance reduction (0-70%). Works best with correlation >0.7
+- **CUPED** (strongest): Use pre-experiment covariate correlated with the metric. Specify covariate name and expected variance reduction (typically 20-40%, up to 70% with highly correlated covariates). Works best with correlation >0.7
 - **Post-stratification**: Stratify by variables like geography, device. Improves precision post-analysis
 - **Matched pairs**: Match treatment/control units before randomization
 - **Blocking**: Divide population into homogeneous blocks, randomize within blocks

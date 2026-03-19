@@ -150,7 +150,7 @@
 
 **Cons**: Less interpretable than A/B tests, harder to establish causality, requires more sophisticated infrastructure, may converge to local optimum.
 
-**Defaults**: alpha=0.05, power=0.8, 3 arms.
+**Defaults**: 3 arms, epsilon=0.10, minimum horizon=1,000. (Traditional alpha/power do not apply to MAB — see Notes below.)
 
 **Randomization**: REQUEST, RANDOM, not consistent (re-randomized each request).
 

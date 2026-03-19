@@ -16,7 +16,7 @@ Baselines expressed as decimals (0.05 = 5%). Use proportions test for sample siz
 
 ## Continuous Metrics
 
-Baselines as raw values. Provide variance (sigma^2) or standard deviation for sample size calculation. If unknown, default to CV=10% (variance = (baseline * 0.1)^2).
+Baselines as raw values. Provide variance (sigma^2) or standard deviation for sample size calculation. If unknown, see the typical CV table in [statistics.md](statistics.md) — CV varies widely by metric (33% for latency to 150% for revenue). Using an incorrect CV will dramatically affect sample size estimates.
 
 | Metric | Typical Category | Direction | Baseline | Variance | Notes |
 |--------|-----------------|-----------|----------|----------|-------|
