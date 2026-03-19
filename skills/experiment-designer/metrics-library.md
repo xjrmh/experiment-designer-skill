@@ -16,13 +16,13 @@ Baselines expressed as decimals (0.05 = 5%). Use proportions test for sample siz
 
 ## Continuous Metrics
 
-Baselines as raw values. Provide variance (sigma^2) or standard deviation for sample size calculation. If unknown, default to CV=10% (variance = (baseline * 0.1)^2).
+Baselines as raw values. Provide variance (sigma^2) or standard deviation for sample size calculation. If unknown, estimate CV from the typical ranges in [statistics.md](statistics.md) (e.g. revenue 80-150%, latency 30-50%, engagement 25-40%). Do NOT default to CV=10% — this dramatically underestimates variance and sample size for most metrics.
 
 | Metric | Typical Category | Direction | Baseline | Variance | Notes |
 |--------|-----------------|-----------|----------|----------|-------|
 | Revenue per User | PRIMARY | INCREASE | $50 | 2,500 (sd=50) | Average revenue generated per user |
 | Average Order Value | PRIMARY | INCREASE | $75 | 1,875 (sd=43) | Average transaction value |
-| Session Duration | SECONDARY | INCREASE | 180s | 14,400 (sd=120) | Average session length in seconds |
+| Session Duration | SECONDARY | INCREASE | 180s | 23,104 (sd=152) | Average session length in seconds |
 | Page Load Time | GUARDRAIL | DECREASE | 1,500ms | 250,000 (sd=500) | Average page load in milliseconds |
 | Engagement Score | SECONDARY | INCREASE | 7.5 | 6.25 (sd=2.5) | Composite engagement metric |
 

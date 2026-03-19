@@ -45,19 +45,27 @@ where lambda = baseline count rate
 ### Unequal Traffic Allocation
 When control/treatment split is not 50/50:
 ```
-adjusted_n = n * (1 + r)^2 / (4 * r)
+total_n = 2 * n * (1 + r)^2 / (4 * r)
+n_control = total_n / (1 + r)
+n_treatment = r * total_n / (1 + r)
 
-where r = treatment_allocation / control_allocation
+where n = per-variant sample size from the balanced (50/50) formula
+      r = treatment_allocation / control_allocation
 ```
+For r=1 (balanced): total_n = 2n. For r=2 (67/33 split): total_n = 2.25n.
 
 ### Multiple Variants
-When more than 2 variants (including control):
+When more than 2 variants (including control), apply a multiple testing correction
+to alpha and recalculate sample size:
 ```
-adjusted_n = n * (k - 1)
+adjusted_alpha = alpha / (k - 1)              # Bonferroni correction
+adjusted_z_alpha = Z(1 - adjusted_alpha / 2)  # larger z-score
+n_adjusted = n * (adjusted_z_alpha + z_beta)^2 / (z_alpha + z_beta)^2
 
-where k = number of variants
+where k = number of variants (including control)
 ```
-Consider multiple testing correction (Bonferroni, Holm, or Benjamini-Hochberg).
+Example: k=3, alpha=0.05 → adjusted_alpha=0.025, z_alpha goes from 1.96 to 2.24,
+n inflates by ~1.21x (not 2x). Use Holm or Benjamini-Hochberg for less conservative correction.
 
 ### Cluster Design Effect
 For cluster randomized experiments:
@@ -84,9 +92,17 @@ where rho = temporal autocorrelation (0 to 1)
 For factorial designs:
 ```
 total_cells = product of all factor levels
-total_n = n_per_cell * total_cells
 
-If detecting interactions: interaction_n = n_per_cell * 4 * total_cells
+Main effects only:
+  n_per_cell: use base formula with adjusted_alpha = alpha / num_tests
+  total_n = n_per_cell * total_cells
+
+Detecting interactions:
+  n_per_cell: use base formula with adjusted_alpha = alpha / num_tests
+  total_n = n_per_cell * 4 * total_cells
+  (4x factor: interaction contrast variance is 4x that of main effect contrast)
+
+where num_tests = number of main effects + number of interactions
 ```
 
 ### Causal Inference: DiD Serial Correlation
@@ -100,7 +116,10 @@ For epsilon-greedy multi-armed bandit:
 ```
 explore_budget = ceil(horizon * epsilon)
 per_arm_explore = ceil(explore_budget / num_arms)
-estimated_regret = epsilon * horizon * (arms - 1) / arms
+estimated_regret = epsilon * horizon * (arms - 1) / arms * delta
+
+where delta = average reward gap between best arm and other arms
+        (use delta=1 as upper bound for binary 0/1 rewards)
 ```
 
 ## Duration Estimation

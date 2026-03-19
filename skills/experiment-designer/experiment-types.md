@@ -159,7 +159,7 @@
 - **Horizon**: Total observations expected (minimum 1,000)
 - **Exploration rate (epsilon)**: 0 to 0.5. Higher = more exploration, slower convergence
 - **Exploration budget per arm**: (horizon x epsilon) / num_arms
-- **Estimated regret**: epsilon x horizon x (arms - 1) / arms
+- **Estimated regret**: epsilon x horizon x (arms - 1) / arms x delta (delta = avg reward gap; use 1 for binary rewards)
 
 **Choosing epsilon**:
 | Context | Recommended epsilon | Rationale |

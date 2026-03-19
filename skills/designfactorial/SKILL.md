@@ -51,8 +51,12 @@ Configure:
 
 **Sample size calculation**:
 ```
-Base n per cell: use primary metric formula from statistics reference
 total_cells = product of all factor levels
+num_tests = number of main effects + number of interactions (if detecting)
+adjusted_alpha = alpha / num_tests  (Bonferroni)
+adjusted_z_alpha = Z(1 - adjusted_alpha / 2)
+
+Base n per cell: use primary metric formula with adjusted_z_alpha
 
 Main effects only:
   total_n = n_per_cell * total_cells
@@ -60,12 +64,13 @@ Main effects only:
 Detecting interactions:
   total_n = n_per_cell * 4 * total_cells
 ```
+The 4x interaction factor is needed because the interaction contrast variance is 4x that of a main effect contrast. The adjusted alpha is needed to maintain power after multiple testing correction.
 
 See [statistics](../experiment-designer/statistics.md) for base sample size formulas.
 
 Duration estimate:
 ```
-duration_days = ceil(total_n / (daily_traffic * (1 / total_cells)))
+duration_days = ceil(total_n / daily_traffic)
 ```
 Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest reducing factors/levels or increasing MDE.
 

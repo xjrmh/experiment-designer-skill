@@ -51,7 +51,7 @@ Configure the bandit strategy:
 **Other parameters**:
 - **Horizon**: Total expected observations (requests). Minimum 1,000.
 - **Exploration budget per arm**: `ceil(horizon * epsilon / num_arms)`
-- **Estimated regret**: `epsilon * horizon * (arms - 1) / arms` — the expected cost of exploration
+- **Estimated regret**: `epsilon * horizon * (arms - 1) / arms * delta` — the expected cost of exploration, where delta is the average reward gap between best and other arms (use delta=1 as upper bound for binary rewards)
 
 **Alternative strategies** (mention if relevant):
 - **Thompson Sampling**: Bayesian approach, often outperforms epsilon-greedy. Requires defining prior distributions.
