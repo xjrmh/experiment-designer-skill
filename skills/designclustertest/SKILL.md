@@ -69,6 +69,14 @@ Minimum recommended duration: 7 days. If duration > 90 days, warn and suggest al
 - **Consistent assignment**: Yes (clusters stay in same arm throughout)
 - **Stratification**: Strongly recommended — stratify clusters by size, region, or baseline metric to improve balance
 
+**Pre-register the analytical model** — design effect alone does not specify how the test will be analyzed. Choose ONE and document it now (changing later inflates Type I):
+| Method | When to use | Notes |
+|--------|-------------|-------|
+| **Mixed-effects model** (lme4 `lmer`, statsmodels `MixedLM`) | Default for continuous outcomes with ≥ 30 clusters | `y ~ treatment + (1 \| cluster)`; gives correct SE under exchangeability assumption. |
+| **Cluster-robust OLS** (CR1 / CR2 SE) | Few clusters (10-30), or want minimal model assumptions | Use CR2 (Bell-McCaffrey) for < 30 clusters; CR1 over-rejects. |
+| **GEE with exchangeable correlation** | Binary outcome with many clusters | Robust SE built in; population-averaged interpretation. |
+| **Cluster-level summary** (t-test on cluster means) | < 20 clusters, conservative analysis | Simple and exact under normality of cluster means. |
+
 ### Step 5: Variance Reduction
 
 Recommend techniques:
@@ -192,6 +200,31 @@ Then produce the design document:
 - **Iterate if**: [criteria]
 - **Kill if**: [criteria]
 ```
+
+## Common Sections
+
+The following concepts apply to every design produced by this subskill — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md) for canonical definitions:
+
+- **Subgroup / HTE pre-registration** — pre-register subgroup hypotheses (device, geo, tenure, segment) with Bonferroni or Benjamini-Hochberg correction; warn against post-hoc hunting.
+- **Mutual exclusion** — when concurrent experiments share traffic, document the exclusion layer (orthogonal hash seed) or exclusion group.
+- **Ramp plan** — staged rollout (1% → 5% → 25% → 50% → 100%) with per-stage hold durations and auto-halt thresholds; distinct from blast radius.
+- **Simulation-based power** — prefer Monte Carlo simulation for ratio metrics, CUPED, cluster-robust SE, or heavy-tailed data. See [statistics.md](../experiment-designer/statistics.md#simulation-based-power).
+
+When producing the Markdown design document, extend the type-specific template above with:
+- In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
+- A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
+- A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+
+## JSON Export
+
+If the user asks for a machine-readable format, produce a JSON version alongside the Markdown using the schema in [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#json-export).
+
+## Review Checklist
+
+Before launching, have the design reviewed by:
+- [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
+- [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
+- [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
 
 ## Handling Questions
 

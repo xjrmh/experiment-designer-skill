@@ -83,7 +83,7 @@ duration_per_look = ceil(n_max / (K * daily_traffic * allocation_pct))
 total_max_duration = duration_per_look * K
 ```
 
-**Expected sample size**: Under the alternative hypothesis (effect = MDE), average stopping time is typically 50-80% of maximum sample size for OBF designs. Under H0 (no effect), the experiment usually runs to the maximum.
+**Expected sample size**: Under the alternative hypothesis (effect = MDE), average stopping time is typically 50-80% of maximum sample size for OBF designs. Under H0 (no effect), the experiment runs to the maximum **unless a futility boundary is set** — with non-binding futility at conditional power < 20%, expected n under H0 drops to roughly 60-80% of maximum.
 
 ### Step 4: Stopping Boundaries
 
@@ -221,6 +221,31 @@ Then produce the design document:
 - **Ship at final look if**: Primary significant at final boundary + guardrails protected
 - **Kill at final look if**: Primary not significant at final boundary
 ```
+
+## Common Sections
+
+The following concepts apply to every design produced by this subskill — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md) for canonical definitions:
+
+- **Subgroup / HTE pre-registration** — pre-register subgroup hypotheses (device, geo, tenure, segment) with Bonferroni or Benjamini-Hochberg correction; warn against post-hoc hunting.
+- **Mutual exclusion** — when concurrent experiments share traffic, document the exclusion layer (orthogonal hash seed) or exclusion group.
+- **Ramp plan** — staged rollout (1% → 5% → 25% → 50% → 100%) with per-stage hold durations and auto-halt thresholds; distinct from blast radius.
+- **Simulation-based power** — prefer Monte Carlo simulation for ratio metrics, CUPED, cluster-robust SE, or heavy-tailed data. See [statistics.md](../experiment-designer/statistics.md#simulation-based-power).
+
+When producing the Markdown design document, extend the type-specific template above with:
+- In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
+- A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
+- A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+
+## JSON Export
+
+If the user asks for a machine-readable format, produce a JSON version alongside the Markdown using the schema in [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#json-export).
+
+## Review Checklist
+
+Before launching, have the design reviewed by:
+- [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
+- [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
+- [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
 
 ## Handling Questions
 

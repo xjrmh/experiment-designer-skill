@@ -109,6 +109,12 @@ where num_tests = number of main effects + number of interactions
 ```
 VIF = (1 + rho) / (1 - rho)
 adjusted_n = ceil(n * VIF)
+
+where rho = first-order temporal autocorrelation of the outcome series within unit
+            (estimate from residuals of a baseline-period regression of the
+             outcome on unit fixed effects; AR(1) coefficient).
+            Typical range 0.3-0.9 for daily count or revenue series.
+            If rho is unknown, run sensitivity at rho ∈ {0.3, 0.6, 0.8}.
 ```
 
 ### MAB Exploration Budget
@@ -118,9 +124,18 @@ explore_budget = ceil(horizon * epsilon)
 per_arm_explore = ceil(explore_budget / num_arms)
 estimated_regret = epsilon * horizon * (arms - 1) / arms * delta
 
-where delta = average reward gap between best arm and other arms
-        (use delta=1 as upper bound for binary 0/1 rewards)
+where delta = mean reward gap between the best arm and a uniformly-chosen
+              other arm, expressed in the same units as the reward
+              (e.g. delta = 0.02 for a 2-pp CTR gap on binary rewards).
+              For a worst-case bound, use the maximum possible reward
+              (delta = 1 for 0/1 rewards) — but this overstates true regret
+              when arms are close in performance.
 ```
+
+For Thompson Sampling and UCB, regret is asymptotically `O(sqrt(K * T * log T))` —
+fundamentally smaller than ε-greedy's `O(epsilon * T * K)` when ε is fixed.
+Use simulation rather than closed-form for these strategies; see
+[Russo et al. (2018), "A Tutorial on Thompson Sampling"](https://arxiv.org/abs/1707.02038).
 
 ## Duration Estimation
 
@@ -220,6 +235,8 @@ If the ratio distribution is highly skewed or has heavy tails, use bootstrap to 
 
 **Warning**: Using `var(Y_i / X_i)` (variance of per-user ratios) is incorrect when users have different numbers of observations. Always use the delta method or linearization.
 
+**See also**: [Simulation-Based Power](#simulation-based-power) — ratio metrics are a primary case where closed-form power estimates understate true sample requirements.
+
 ## Group Sequential Testing
 
 ### Alpha-Spending Boundaries
@@ -232,8 +249,9 @@ z_k = z_K / sqrt(t_k)
 where t_k = k/K (information fraction at look k)
       z_K ≈ z_alpha for the final look
 ```
+This `z_K / sqrt(t_k)` form is a closed-form approximation; exact OBF boundaries solve a recursive integral and are best obtained from `gsDesign` (R) or `statsmodels.stats.proportion` (Python). The approximation is tightest at the final look and slightly conservative at very early looks.
 
-Example (K=4, alpha=0.05, two-sided):
+Example (K=4, alpha=0.05, two-sided, from gsDesign):
 ```
 | Look | t_k  | z_k   | p_k     |
 |------|------|-------|---------|
@@ -269,6 +287,184 @@ Non-binding futility using conditional power:
 conditional_power = 1 - Phi(z_final - z_current * sqrt(t_max / t_current))
 Stop for futility if conditional_power < 0.20
 ```
+
+## Bayesian A/B Formulas
+
+### Beta-Binomial (rates)
+
+For binary outcomes with prior `Beta(α0, β0)`:
+```
+posterior_control    = Beta(α0 + successes_c, β0 + failures_c)
+posterior_treatment  = Beta(α0 + successes_t, β0 + failures_t)
+```
+
+**Probability treatment beats control**:
+```
+P(θ_t > θ_c) = integral over the joint posterior
+            ≈ Monte Carlo: sample N times from each posterior, count fraction where t > c
+```
+
+**Expected loss** (the probability-weighted magnitude of picking the wrong arm):
+```
+E[loss | ship treatment]  = E[max(0, θ_c − θ_t)]
+E[loss | ship control]    = E[max(0, θ_t − θ_c)]
+Ship the arm with lower expected loss, provided loss < tolerance (e.g. 0.5% of baseline).
+```
+
+### Normal-Normal (continuous means)
+
+For continuous outcomes with known variance σ² and prior `Normal(μ0, τ0²)`:
+```
+posterior = Normal(μ_post, τ_post²)
+  where τ_post² = 1 / (1/τ0² + n/σ²)
+        μ_post  = τ_post² * (μ0/τ0² + sum(y)/σ²)
+```
+
+For unknown variance, use Normal-Inverse-Gamma conjugate or numerical MCMC.
+
+### Prior Recommendations
+
+| Context | Prior | Notes |
+|---------|-------|-------|
+| Default / no strong beliefs | Beta(1,1) or Normal(0, large σ²) | Near-frequentist behavior |
+| Rare events (conversion < 2%) | Beta(2, 98) — centered at 2% | Stabilizes estimates, lightly informative |
+| Drawing from past experiment distribution | Empirical Bayes: fit α,β to past experiment effect distribution | Best when 10+ past experiments exist |
+| Regulated / skeptical | Weakly informative centered at 0 | Requires strong evidence to move posterior |
+
+### Sample Size (approximate)
+
+Closed-form Bayesian sample size is rarely clean — use simulation:
+1. Fix priors, fix decision rule (e.g. ship if E[loss] < ε AND P(beat) > 0.95).
+2. Simulate from the alternative hypothesis (true lift = MDE) with n per arm.
+3. Compute posterior, apply decision rule.
+4. Repeat 1,000+ times; fraction reaching correct decision = Bayesian power.
+5. Binary search over n until power = 0.8.
+
+For a rough frequentist-equivalent starting point, use the base binary/continuous formula — posterior-based decisions and p-value-based decisions are close under weak priors.
+
+## Equivalence / Non-Inferiority (TOST)
+
+### Test structure
+
+Two one-sided tests against the equivalence margin ±δ:
+```
+H0_lower: Δ ≤ −δ    vs H1_lower: Δ > −δ
+H0_upper: Δ ≥ +δ    vs H1_upper: Δ < +δ
+Reject H0 (declare equivalence) if BOTH one-sided tests reject at level α.
+```
+
+Equivalently, the (1 − 2α) two-sided CI for Δ must be fully contained in [−δ, +δ].
+
+**Non-inferiority**: Only the lower bound matters:
+```
+H0: Δ ≤ −δ   vs H1: Δ > −δ
+Reject H0 (declare non-inferiority) if the one-sided test rejects at level α.
+```
+
+### Sample Size
+
+```
+n = 2 * (z_alpha + z_beta)^2 * sigma^2 / (delta - abs(Delta))^2
+
+where delta = equivalence margin
+      Delta = expected true difference (often 0 for equivalence, small for non-inferiority)
+      sigma = standard deviation of the metric
+      z_alpha = Z(1 - alpha)         # one-sided
+      z_beta  = Z(power)
+```
+
+For binary metrics, replace `sigma^2` with `p * (1 - p)` (the leading `2 *` already accounts for the two-arm structure).
+
+**Feasibility**: If δ is small and expected |Δ| is close to δ, the denominator `(δ − |Δ|)` becomes tiny and n explodes. Run feasibility before committing.
+
+**Standard convention**: Report the 90% CI when testing equivalence at α=0.05 per side (equivalent to two-sided 90% coverage). Report 95% one-sided CI for non-inferiority at α=0.05.
+
+### Choosing δ
+
+The equivalence margin is the hardest design choice. Framework:
+1. **Regulatory**: If regulated, a fixed margin is often prescribed (e.g. FDA: 1.5× hazard ratio).
+2. **Business cost**: What decrement in the metric would change a downstream decision? Set δ to that value.
+3. **Historical variability**: δ should be smaller than the variability between historical experiments on the same metric.
+4. **Sanity check**: If δ > typical MDE, the test is trivial; if δ < 0.1 × typical MDE, n will be infeasible.
+
+## Always-Valid Inference / mSPRT
+
+### Confidence Sequence (mixture SPRT)
+
+For a one-parameter test with mixture prior `f(θ) = Normal(0, σ_tune²)`:
+```
+M_n = integral of exp(sum_i log p(X_i | θ) − log p(X_i | 0)) * f(θ) dθ
+```
+`M_n` is a martingale under H0; the level-α boundary is `M_n ≥ 1/α`.
+
+**Confidence sequence**:
+```
+CS_n = {θ : M_n(θ) < 1/α}
+```
+The coverage probability `P(θ_true ∈ CS_n for all n)` ≥ 1 − α for any sample size — i.e. anytime-valid.
+
+### Sample-Size Inflation
+
+Compared to a fixed-sample test at the same α and power, mSPRT requires roughly:
+```
+n_mSPRT ≈ n_fixed * [1 + 2 * log(1/alpha) / (z_alpha + z_beta)^2]    # loose upper bound
+```
+Plugging in α=0.05, power=0.8: closed form gives ~76% inflation, but this is a loose worst-case bound — empirical inflation under properly-tuned `σ_tune` is **10-30%** (Johari et al. 2022, simulation). Use the closed-form value as a hard cap for budgeting; expect actual stopping to occur much earlier. For precise sizing, simulate against historical data with the planned mixture prior.
+
+### Mixture prior choice
+
+- `σ_tune` should be on the order of the expected effect size.
+- Wider `σ_tune` = robust to small effects but slower stopping.
+- Tighter `σ_tune` = faster stopping if effect ≈ σ_tune, slower if far from it.
+- Rule of thumb: set σ_tune = MDE.
+
+**Reference**: Johari, Koomen, Pekelis, Walsh (2022), "Always Valid Inference: Continuous Monitoring of A/B Tests", *Management Science*.
+
+## Simulation-Based Power
+
+Closed-form power formulas assume iid observations, near-normal distributions, and simple-mean estimators. When any assumption breaks, simulate:
+
+### Procedure
+
+```
+1. Obtain historical data representative of the experiment population.
+2. Define the DGP (data-generating process):
+   - null:  resample with replacement from historical data (no effect).
+   - alt:   resample AND apply the hypothesized effect (e.g. multiply revenue by 1 + MDE in one arm).
+3. For each simulated experiment:
+   a. Draw n_per_arm users per arm according to the DGP.
+   b. Apply the planned analysis exactly (CUPED, cluster-robust SE, ratio-metric delta method, etc.).
+   c. Record whether the test would reject H0.
+4. Repeat 1,000+ times (10,000+ for precise tail behavior).
+5. Power = fraction of alt simulations that reject.
+   Type-I rate = fraction of null simulations that reject (should be ≤ alpha).
+6. Binary-search over n to hit target power.
+```
+
+### When to use
+
+| Situation | Why simulate |
+|-----------|-------------|
+| Ratio metrics (revenue/session) | Delta-method variance is approximate; simulation verifies |
+| CUPED / regression adjustment | Effective variance depends on covariate correlation; closed forms are rough |
+| Cluster-robust or HC3 SE | Finite-sample behavior differs from asymptotic |
+| Heavy-tailed continuous (revenue, duration) | Normal approximation may be poor at moderate n |
+| Bayesian decision rules | Closed-form Bayesian power is usually unavailable |
+| Novel / custom estimators | No closed form exists |
+
+### Validation
+
+Verify the simulation code reproduces a known closed-form result before trusting it on the novel case: run with iid normal data and a simple t-test; the simulated power should match the formula within Monte Carlo noise.
+
+### Interrupted Time Series Sample Size
+
+For ITS, the "sample" is time periods. Rough rule:
+```
+Required pre-periods ≈ 20+
+Required post-periods ≈ 10+
+Power depends on: effect size, autocorrelation in the series, and presence of seasonality.
+```
+Use simulation with historical data + injected intervention to estimate power directly.
 
 ### Interleaving Sample Size
 
@@ -325,8 +521,14 @@ If the calculated duration is too long for your target MDE:
 ### Computing Cohen's d
 ```
 d = (mean_treatment - mean_control) / pooled_sd
-pooled_sd = sqrt((sd_treatment^2 + sd_control^2) / 2)
+
+Equal arms:
+  pooled_sd = sqrt((sd_treatment^2 + sd_control^2) / 2)
+
+Unequal arms (n_t ≠ n_c):
+  pooled_sd = sqrt(((n_t - 1) * sd_t^2 + (n_c - 1) * sd_c^2) / (n_t + n_c - 2))
 ```
+Use the unequal form whenever sample sizes differ by >10% (e.g. holdouts, geo, any unbalanced allocation).
 
 ### Practical vs Statistical Significance
 

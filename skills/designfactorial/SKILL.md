@@ -38,9 +38,9 @@ See [metrics-library](../experiment-designer/metrics-library.md) for common metr
 
 **Critical question**: "Do you need to detect **interaction effects** between factors, or only main effects?"
 - **Main effects only**: Tests whether each factor independently affects the metric. Sample size = n per cell.
-- **Interaction effects**: Tests whether the combination of factors has a different effect than the sum of individual effects. Sample size = n per cell x 4 (approximately).
+- **Interaction effects**: Tests whether the combination of factors has a different effect than the sum of individual effects. Sample size = n per cell × 4 (approximately, for **2-level** factors).
 
-This choice has a ~4x impact on required sample size. Default to main effects only unless the user specifically needs interactions.
+The 4× factor is specific to 2² designs (the two-way interaction contrast involves 4 cell means with ±1 weights, giving variance 4× a main-effect contrast). For higher-level factors (3-level, 4-level), the inflation depends on the contrast coding — use simulation or `pwr2` / G*Power. Default to main effects only unless the user specifically needs interactions.
 
 Configure:
 - **Alpha**: Default 0.05
@@ -204,6 +204,31 @@ Then produce the design document:
 - **Iterate if**: [criteria]
 - **Kill if**: [criteria]
 ```
+
+## Common Sections
+
+The following concepts apply to every design produced by this subskill — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md) for canonical definitions:
+
+- **Subgroup / HTE pre-registration** — pre-register subgroup hypotheses (device, geo, tenure, segment) with Bonferroni or Benjamini-Hochberg correction; warn against post-hoc hunting.
+- **Mutual exclusion** — when concurrent experiments share traffic, document the exclusion layer (orthogonal hash seed) or exclusion group.
+- **Ramp plan** — staged rollout (1% → 5% → 25% → 50% → 100%) with per-stage hold durations and auto-halt thresholds; distinct from blast radius.
+- **Simulation-based power** — prefer Monte Carlo simulation for ratio metrics, CUPED, cluster-robust SE, or heavy-tailed data. See [statistics.md](../experiment-designer/statistics.md#simulation-based-power).
+
+When producing the Markdown design document, extend the type-specific template above with:
+- In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
+- A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
+- A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+
+## JSON Export
+
+If the user asks for a machine-readable format, produce a JSON version alongside the Markdown using the schema in [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#json-export).
+
+## Review Checklist
+
+Before launching, have the design reviewed by:
+- [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
+- [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
+- [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
 
 ## Handling Questions
 

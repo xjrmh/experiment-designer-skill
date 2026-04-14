@@ -33,9 +33,13 @@ Help the user define:
 
 Define how to score which system "wins":
 
-**Credit function**: When a user interacts with an item in the interleaved list, credit goes to the system that contributed that item.
-- If an item appears in both systems' lists, assign credit proportionally or to the system that ranked it higher.
-- If an item appears in only one system's list, full credit to that system.
+**Credit function**: When a user interacts with an item in the interleaved list, credit goes to the system that contributed that item. Pre-register ONE scheme:
+- **Sliding-window / per-click credit (Team Draft default)**: each click credits the system whose "team" picked that item in the interleave. Most sensitive; standard for Team Draft.
+- **Total session credit**: sum item-level credits over the whole session, then take whichever system has more credit as the "winner" of that session. Less sensitive but easier to interpret.
+- **Item shared by both systems**: credit proportionally to the rank-position in each system's list (Chapelle et al. 2012), or split evenly. Document which.
+- **Item in only one system's list**: full credit to that system.
+
+Credit-scheme choice changes effective variance and therefore required sample size — pre-register and stick with it.
 
 **Primary metric**: **Win rate** — fraction of interleaved sessions where System B is preferred over System A.
 ```
@@ -98,7 +102,7 @@ Recommend techniques:
 - **Paired comparison** (inherent): Interleaving already uses within-user comparison, which is the strongest form of variance reduction.
 - **Query-level analysis**: For search systems, analyze win rates per query type or category for more granular insights.
 - **Stratified analysis**: Break down results by user segment, platform, or query type.
-- **Excluding ties**: Sessions where both systems receive equal credit can be excluded to increase sensitivity (but report exclusion rate).
+- **Excluding ties**: Sessions where both systems receive equal credit can be excluded to increase sensitivity, BUT this introduces selection bias if ties correlate with query difficulty or user behavior (e.g. navigational queries that produce identical top results regardless of system). Pre-register the exclusion rule, report the exclusion rate, and run a sensitivity analysis including ties (assigning each as a tied 0.5-0.5 outcome).
 
 ### Step 6: Risk Assessment
 
@@ -191,6 +195,37 @@ Then produce the design document:
 - **Iterate if**: Win rate near 0.50 — no clear preference. Refine System B.
 - **Kill if**: Win rate significantly < 0.50 — System A is preferred.
 ```
+
+## Monitoring & Stopping Rules
+
+- **Refresh frequency**: Hourly for high-traffic ranking systems; daily otherwise.
+- **SRM equivalent**: Check that ~50% of merged items come from each system (per the interleaving algorithm). Team Draft handles position bias naturally.
+- **Stopping**: Fixed-sample at planned n; or use sequential inference on the win-rate binomial if early stopping is desired — but follow up with a standard A/B test before shipping either system to measure user-facing impact.
+
+## Common Sections
+
+The following concepts apply to every design produced by this subskill — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md) for canonical definitions:
+
+- **Subgroup / HTE pre-registration** — pre-register subgroup hypotheses (device, geo, tenure, segment) with Bonferroni or Benjamini-Hochberg correction; warn against post-hoc hunting.
+- **Mutual exclusion** — when concurrent experiments share traffic, document the exclusion layer (orthogonal hash seed) or exclusion group.
+- **Ramp plan** — staged rollout (1% → 5% → 25% → 50% → 100%) with per-stage hold durations and auto-halt thresholds; distinct from blast radius.
+- **Simulation-based power** — prefer Monte Carlo simulation for ratio metrics, CUPED, cluster-robust SE, or heavy-tailed data. See [statistics.md](../experiment-designer/statistics.md#simulation-based-power).
+
+When producing the Markdown design document, extend the type-specific template above with:
+- In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
+- A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
+- A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+
+## JSON Export
+
+If the user asks for a machine-readable format, produce a JSON version alongside the Markdown using the schema in [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#json-export).
+
+## Review Checklist
+
+Before launching, have the design reviewed by:
+- [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
+- [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
+- [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
 
 ## Handling Questions
 
