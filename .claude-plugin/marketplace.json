@@ -1,0 +1,13 @@
+{
+  "name": "experiment-designer-skill",
+  "owner": {
+    "name": "xjrmh"
+  },
+  "plugins": [
+    {
+      "name": "experiment-designer",
+      "source": "./",
+      "description": "Statistically rigorous experiment design skills — 16 designs covering A/B, group sequential, always-valid (mSPRT), Bayesian, TOST, cluster, stepped-wedge, switchback, crossover, geo, incrementality, causal inference, factorial, bandit, interleaving, and holdout, plus a general-purpose router."
+    }
+  ]
+}

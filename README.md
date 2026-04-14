@@ -55,19 +55,24 @@ Every skill walks through the same spine:
 
 Designed for [Claude Code](https://claude.com/product/claude-code). The SKILL.md files are plain Markdown prompts — they can be adapted to Cursor rules, the Claude Agent SDK, Custom GPTs, or any agent tool that accepts custom instructions by copying the body into that tool's instruction format. Slash-command autoloading and the router in `/experiment-designer` are Claude Code-specific; the workflow content and statistical logic are not.
 
-## Installation
+## Install
 
-**Project-level** (recommended):
-```bash
-mkdir -p .claude/skills
-cp -r skills/* .claude/skills/
+**Claude Code plugin marketplace** (recommended — native, versioned, `/plugin update` works):
+
+```
+/plugin marketplace add xjrmh/experiment-designer-skill
+/plugin install experiment-designer@experiment-designer-skill
 ```
 
-**Personal** (available in all projects):
+**Shell one-liner** (works anywhere `~/.claude/skills/` is read — Claude Code, Agent SDK, etc.):
+
 ```bash
-mkdir -p ~/.claude/skills
-cp -r skills/* ~/.claude/skills/
+rm -rf /tmp/eds && git clone https://github.com/xjrmh/experiment-designer-skill /tmp/eds && \
+  mkdir -p ~/.claude/skills && cp -r /tmp/eds/skills/* ~/.claude/skills/ && \
+  rm -rf /tmp/eds
 ```
+
+For a project-level install instead, replace `~/.claude/skills/` with `.claude/skills/` inside your project root.
 
 ## Usage
 
