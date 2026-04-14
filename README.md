@@ -1,6 +1,10 @@
 # Experiment Designer Skills
 
-A suite of Claude Code skills for designing statistically rigorous experiments end-to-end. Covers **16 designs** — from standard A/B tests to always-valid sequential monitoring, stepped-wedge rollouts, geo/matched-markets, and post-launch holdouts. Every run produces a complete design document with sample-size math, randomization strategy, variance-reduction plan, risk assessment, and ship/iterate/kill criteria.
+A suite of skills for designing statistically rigorous experiments end-to-end. Covers **16 designs** — from standard A/B tests to always-valid sequential monitoring, stepped-wedge rollouts, geo/matched-markets, and post-launch holdouts. Every run produces a complete design document with sample-size math, randomization strategy, variance-reduction plan, risk assessment, and ship/iterate/kill criteria.
+
+## Why use a skill?
+
+Generic prompts drift — asking an LLM to "design an A/B test for me" twice produces two different structures with sample-size math you have to double-check. The skills enforce a fixed 8-step spine, run the correct formula for the design you picked (two-proportion, ratio metrics with the delta method, cluster-adjusted with ICC inflation, sequential with alpha-spending, TOST for equivalence), and emit a consistent reviewable artifact — not prose. Think of it as an experiment-design template with a statistician reading along.
 
 ## Two ways to use it
 
@@ -47,6 +51,10 @@ Every skill walks through the same spine:
 | `/designinterleaving` | Interleaving | Compare ranking/recommendation systems; 10–100× more sensitive than A/B |
 | `/designholdout` | Holdout / Holdback | Post-launch: measure long-term effects (retention, LTV, novelty decay) |
 
+## Requirements
+
+Designed for [Claude Code](https://claude.com/product/claude-code). The SKILL.md files are plain Markdown prompts — they can be adapted to Cursor rules, the Claude Agent SDK, Custom GPTs, or any agent tool that accepts custom instructions by copying the body into that tool's instruction format. Slash-command autoloading and the router in `/experiment-designer` are Claude Code-specific; the workflow content and statistical logic are not.
+
 ## Installation
 
 **Project-level** (recommended):
@@ -90,19 +98,46 @@ Or go straight to a specific design:
 
 ## Output
 
-Each run produces a Markdown design document containing:
+Each run produces a Markdown design document. A truncated example from `/designabtest "simplify the checkout flow"`:
 
-- Hypothesis and success criteria
-- Metrics table with baselines
-- Sample size calculation and duration estimate
-- Randomization and assignment strategy
-- Variance reduction plan
-- Risk assessment and pre-launch checklist
-- Monitoring and stopping rules
-- Ship / iterate / kill decision framework
-- Post-experiment guidance — effect size, practical significance, follow-ups
-- Sign-off checklist (statistician, engineer, PM)
-- Optional JSON export for platforms like Statsig, Eppo, and GrowthBook
+~~~md
+# Experiment Design: Simplified Checkout Flow
+
+## Overview
+- **Type**: A/B Test
+- **Hypothesis**: If we collapse checkout to a single page, then completion
+  rate will increase because fewer drop-off points remain.
+
+## Metrics
+| Metric              | Category  | Type       | Direction | Baseline |
+|---------------------|-----------|------------|-----------|----------|
+| Checkout completion | PRIMARY   | BINARY     | INCREASE  | 0.10     |
+| Revenue per user    | GUARDRAIL | CONTINUOUS | EITHER    | $18.40   |
+| Refund rate         | GUARDRAIL | BINARY     | DECREASE  | 0.012    |
+
+## Statistical Design
+- **Alpha**: 0.05 (two-sided)   **Power**: 0.80
+- **MDE**: 5% relative (0.10 → 0.105)
+- **Sample size per variant**: 56,448   **Total**: 112,896
+- **Duration**: ~6 days @ 20K daily traffic, 50/50 split
+
+## Randomization
+- **Unit**: user_id, hash-based, consistent assignment
+- **Stratification**: device_type
+
+## Monitoring & Stopping Rules
+- SRM check at p < 0.001, evaluated hourly
+- Kill if refund rate rises >20% relative
+- Ship if primary wins at p < 0.05 AND no guardrail degrades >1%
+
+## Decision Framework
+- **Ship if**: completion lifts ≥5% relative, no guardrail breach
+- **Iterate if**: directional lift but not significant
+- **Kill if**: guardrail breach or negative completion trend
+...
+~~~
+
+A full run also includes variance-reduction plan (CUPED, stratification), risk assessment and pre-launch checklist, ramp plan with per-stage auto-halt thresholds, type-specific parameters (priors for Bayesian, margin δ for TOST, cluster sequence for stepped-wedge, etc.), post-experiment guidance on effect size and practical significance, a statistician/engineer/PM sign-off checklist, and optional JSON export for platforms like Statsig, Eppo, and GrowthBook.
 
 ## Repository layout
 
