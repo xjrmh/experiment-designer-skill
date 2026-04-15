@@ -74,7 +74,9 @@ rm -rf /tmp/eds && git clone https://github.com/xjrmh/experiment-designer-skill 
 
 For a project-level install instead, replace `~/.claude/skills/` with `.claude/skills/` inside your project root.
 
-## Usage
+## Demo
+
+Quick start — three ways to invoke the router:
 
 ```
 /experiment-designer
@@ -82,28 +84,15 @@ For a project-level install instead, replace `~/.claude/skills/` with `.claude/s
 /experiment-designer --quick A/B test, conversion rate, 5% MDE, 10K daily traffic
 ```
 
-Or go straight to a specific design:
+Or jump straight to any of the 16 design-specific skills listed in the table above (e.g. `/designsequential test checkout with an early-stopping option`, `/designgeo measure TV campaign lift across DMAs`).
+
+**End-to-end example.** Input:
 
 ```
-/designabtest I want to test a new checkout flow
-/designsequential test checkout with an early-stopping option
-/designalwaysvalid live conversion dashboard with continuous peeking
-/designbayesian pricing test with prior on recent lift
-/designequivalence prove new vendor match rate is within 1% of incumbent
-/designclustertest compare driver incentives across cities
-/designsteppedwedge phased rollout of a new scheduling algorithm
-/designswitchback marketplace pricing experiment
-/designcrossover latency test where each user sees both algorithms
-/designgeo measure TV campaign lift across DMAs
-/designincrementality paid-social uplift vs PSA control
-/designbandit optimize homepage hero banner
-/designinterleaving compare v1 vs v2 search ranking
-/designholdout long-term retention impact of the search redesign
+/designabtest "simplify the checkout flow"
 ```
 
-## Output
-
-Each run produces a Markdown design document. A truncated example from `/designabtest "simplify the checkout flow"`:
+Output — a Markdown design document (truncated):
 
 ~~~md
 # Experiment Design: Simplified Checkout Flow
