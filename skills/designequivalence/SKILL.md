@@ -122,9 +122,9 @@ See [statistics.md](../experiment-designer/statistics.md#equivalence--non-inferi
 [As above]
 
 ### Decision Framework
-- **Ship (declare equivalence / non-inferiority) if**: 90% CI for (treatment - control) fully inside [-delta, +delta] (or > -delta for non-inferiority) AND guardrails protected
-- **Reject the change if**: CI crosses the margin OR any guardrail degrades
-- **Insufficient data if**: CI too wide — extend or cap
+- **✅ Ship (declare equivalence / non-inferiority) if**: 90% CI for (treatment - control) fully inside [-delta, +delta] (or > -delta for non-inferiority) AND guardrails protected
+- **❌ Reject the change if**: CI crosses the margin OR any guardrail degrades
+- **⚠️ Insufficient data if**: CI too wide — extend or cap
 
 ### Reporting
 - Point estimate + 90% CI for (treatment - control)
@@ -155,6 +155,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block. Note: holdback typically doesn't apply for vendor swaps / refactors — skip step 7 unless measuring a downstream durable effect of the swap.
 
 ## JSON Export
 
@@ -166,6 +167,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM (have the statistician verify the equivalence margin δ is defensible and pre-registered), then instrument logging and run an AA test before ramping. Do NOT peek — TOST inflates both error rates under continuous monitoring. **After confirmed equivalence:** use the `experiment-readout` skill for the final readout. Holdback typically doesn't apply for vendor swaps unless measuring a downstream durable effect.
 
 ## Handling Questions
 

@@ -117,9 +117,9 @@ Sized so that if the true effect = MDE, the confidence sequence excludes 0 befor
 [As above]
 
 ### Decision Framework
-- **Ship if**: Confidence sequence excludes 0 on the positive side AND guardrails protected
-- **Kill if**: Confidence sequence excludes 0 on the negative side OR guardrail CS shows harm
-- **Inconclusive if**: n_max reached with CS still covering 0
+- **✅ Ship if**: Confidence sequence excludes 0 on the positive side AND guardrails protected
+- **❌ Kill if**: Confidence sequence excludes 0 on the negative side OR guardrail CS shows harm
+- **⚠️ Inconclusive if**: n_max reached with CS still covering 0
 
 ### Reporting
 - Current point estimate + always-valid confidence sequence (not fixed-sample CI)
@@ -147,6 +147,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block.
 
 ## JSON Export
 
@@ -158,6 +159,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM (have the statistician confirm the mSPRT mixture prior and the maximum-n cap), then instrument logging and run an AA test before ramping. Continuous peeking is allowed under mSPRT — but the dashboard must compute the always-valid p-value or confidence sequence, not naive z. **After ship:** run `/designholdout` for long-term effects and the `experiment-readout` skill for the final readout.
 
 ## Handling Questions
 

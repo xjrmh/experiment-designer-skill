@@ -127,9 +127,9 @@ where c = cluster, t = period, i = unit within cluster-period
 [As above]
 
 ### Decision Framework
-- **Accept rollout as successful if**: [criteria]
-- **Iterate if**: [criteria]
-- **Halt / roll back if**: [criteria]
+- **✅ Accept rollout as successful if**: [criteria]
+- **⚠️ Iterate if**: [criteria]
+- **❌ Halt / roll back if**: [criteria]
 ```
 
 ## Variance Reduction
@@ -155,6 +155,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — "Crossover sequence serves as the ramp" (default), or a separate per-stage schedule if additional gating is applied.
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block. Note: all clusters eventually receive treatment by design — there is no post-launch holdback; skip step 7.
 
 ## JSON Export
 
@@ -166,6 +167,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM, lock the cluster sequence (cannot be changed mid-experiment), and instrument cluster-level logging. Confirm every cluster can commit to the full schedule — losing a cluster mid-run severely biases the estimator. All clusters eventually receive treatment by design — **no post-launch holdback**. Use the `experiment-readout` skill for the final mixed-model readout.
 
 ## Handling Questions
 

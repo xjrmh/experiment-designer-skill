@@ -120,9 +120,9 @@ See [statistics](../experiment-designer/statistics.md) for base formulas.
 [As above]
 
 ### Decision Framework
-- **Scale campaign if**: [ITT lift significant + guardrails protected]
-- **Iterate creative / targeting if**: [partial lift + exposure rate low]
-- **Kill / reallocate budget if**: [ITT null]
+- **✅ Scale campaign if**: [ITT lift significant + guardrails protected]
+- **⚠️ Iterate creative / targeting if**: [partial lift + exposure rate low]
+- **❌ Kill / reallocate budget if**: [ITT null]
 ```
 
 ## Variance Reduction
@@ -148,6 +148,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block. Note: the PSA / ghost-ad cell already serves as the lift control — sustaining a small permanent PSA cell post-launch is the equivalent of a holdback.
 
 ## JSON Export
 
@@ -159,6 +160,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM, verify PSA / ghost-ad serving parity (auction-eligibility, win rate, exposure rate per arm), confirm the exposure definition is documented, then start the test window. The PSA / ghost-ad cell already serves as the lift control — sustaining a small permanent PSA cell post-launch is the equivalent of a holdback. Use the `experiment-readout` skill for the final lift readout.
 
 ## Handling Questions
 

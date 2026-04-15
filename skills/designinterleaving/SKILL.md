@@ -191,9 +191,9 @@ Then produce the design document:
 - [ ] Stakeholder approval
 
 ## Decision Framework
-- **Proceed to A/B test if**: Win rate significantly > 0.50, confirming B is preferred. Interleaving validates ranking quality; A/B test validates user-facing metrics (engagement, revenue).
-- **Iterate if**: Win rate near 0.50 — no clear preference. Refine System B.
-- **Kill if**: Win rate significantly < 0.50 — System A is preferred.
+- **✅ Proceed to A/B test if**: Win rate significantly > 0.50, confirming B is preferred. Interleaving validates ranking quality; A/B test validates user-facing metrics (engagement, revenue).
+- **⚠️ Iterate if**: Win rate near 0.50 — no clear preference. Refine System B.
+- **❌ Kill if**: Win rate significantly < 0.50 — System A is preferred.
 ```
 
 ## Monitoring & Stopping Rules
@@ -215,6 +215,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block. Note: interleaving compares rankings — once a winner is established, ship the winning ranker and run a follow-up A/B (`/designabtest`) to measure the full-feature lift before considering a holdback.
 
 ## JSON Export
 
@@ -226,6 +227,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM, instrument the interleaving algorithm (Team Draft or Probabilistic) with click attribution per source ranker, then start the test. **After a winner is established:** ship the winning ranker and run a follow-up `/designabtest` to measure the full-feature lift on user-facing metrics (engagement, revenue), then optionally `/designholdout` for long-term effects. Use the `experiment-readout` skill for the win-rate readout.
 
 ## Handling Questions
 

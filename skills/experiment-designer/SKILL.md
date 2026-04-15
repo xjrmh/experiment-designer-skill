@@ -192,6 +192,11 @@ Generate a name, hypothesis, and description:
 
 Then produce the **Experiment Design Document** (see output format below).
 
+After the doc, end the chat turn with a 2–3 line **handoff message** so the user knows what to do next. Do not restate the doc — point only to the immediate next action and the eventual handoffs. Template:
+> Done — design above. Immediate next: share with statistician / engineer / PM, then instrument logging and run an AA test before ramping. After ship, run `/designholdout` for long-term effects and the `experiment-readout` skill for the final readout.
+
+Adapt the handoff for designs where post-launch holdback or ramping doesn't apply (MAB, holdout itself, causal inference, switchback / geo / incrementality at the same unit).
+
 ## Inference Rules
 
 When the user describes what they want to test, infer as much as possible:
@@ -293,21 +298,35 @@ At the end of Step 8, produce a complete design document in this format:
 | [type] | [description] | [value] |
 
 ### Decision Framework
-- **Ship if**: [criteria]
-- **Iterate if**: [criteria]
-- **Kill if**: [criteria]
+- **✅ Ship if**: [criteria]
+- **⚠️ Iterate if**: [criteria]
+- **❌ Kill if**: [criteria]
 
-## Post-Experiment Guidance
-- **Calculating actual effect**: Compute the observed effect size and 95% confidence interval. Report both relative and absolute effects.
-- **Practical significance**: A statistically significant result may not be practically meaningful. Consider: what is the business impact of this effect size? Use Cohen's d for context (small: 0.2, medium: 0.5, large: 0.8).
-- **Edge cases**: If the effect is significant but small, weigh implementation/maintenance costs. If guardrails moved but not beyond thresholds, flag for discussion.
-- **Follow-up**: Recommend holdback experiments (keep a small % on control post-launch) to monitor long-term effects. Link to the causal inference skill for deeper post-hoc analysis.
+## Next Steps
+
+Work this in three phases. Items reference the blocks above by name.
+
+**Pre-launch**
+1. **Sign-offs** — share this doc with each reviewer below. They look at:
+   - **Statistician** — sample-size math, MDE realism, multiple-testing correction, type-specific stats (alpha-spending boundaries, TOST margin δ, Bayesian priors, ICC inflation, mSPRT mixture, geo-match RMSPE, etc.)
+   - **Engineer** — assignment + event logging schema, randomization correctness (hash salt, consistency, layer/exclusion group), alert wiring, kill switch
+   - **PM / stakeholder** — metric → goal alignment, blast-radius tolerance, ship/iterate/kill thresholds, ramp authority
+2. **Instrument logging** — emit `experiment_id`, `variant`, `<randomization_unit>_id`, `assignment_timestamp` on assignment; emit every primary + guardrail metric event with the same keys. Verify the join end-to-end with a sample query before launch.
+3. **AA test** — run identical control-vs-control for ≥1 metric cycle (often 1 week). Verify SRM with chi-squared at the threshold above. No primary/guardrail should move beyond noise. If anything moves, fix the pipeline before re-running AA.
+4. **Wire alerts** — page on-call on every rollback trigger and circuit breaker. Confirm thresholds match the Risk Assessment block. Test by injecting a synthetic breach.
+
+**Run**
+5. **Ramp** — advance one stage at a time per the Ramp Plan. Hold for the stated duration. Auto-halt if any per-stage threshold breaches. Statistical analysis runs at the final stage only — earlier stages are risk gates.
+6. **Monitor & decide** — refresh at the cadence above. Do NOT peek at the primary outside the Stopping Rules. At the planned stop, apply the Decision Framework (Ship / Iterate / Kill).
+
+**Post-launch**
+7. **Long-term effect (Holdout)** — after ship, run [`/designholdout`](../designholdout/SKILL.md) to keep a small % on control and measure retention / LTV / novelty decay at 30 / 60 / 90 days. Skip if this design IS the holdout, or if randomization unit makes a holdback infeasible (switchback / geo / incrementality at the same grain).
+8. **Readout** — produce the final readout with the `experiment-readout` skill (or `engineering:experiment-readout` if available): observed effect size + 95% CI (relative AND absolute), practical-significance call (Cohen's d for context — small 0.2 / medium 0.5 / large 0.8), guardrail summary. If a guardrail moved within threshold, flag for discussion. For deeper post-hoc causal analysis on confounded subgroups or natural experiments, route to [`/designcausalinference`](../designcausalinference/SKILL.md).
 
 ## Review Checklist
-Before launching, have the design reviewed by:
-- [ ] **Statistician**: Sample size methodology, statistical approach, multiple testing
-- [ ] **Engineer**: Logging infrastructure, randomization implementation, monitoring
-- [ ] **PM/Stakeholder**: Metrics alignment, success criteria, business context
+- [ ] **Statistician** — sample-size math, multiple-testing correction, type-specific stats
+- [ ] **Engineer** — logging schema, randomization correctness, alert wiring, kill switch
+- [ ] **PM / Stakeholder** — metric→goal alignment, blast radius, ship/iterate/kill thresholds
 ```
 
 ## JSON Export

@@ -210,6 +210,7 @@ The following concepts apply to every design produced by this subskill — see [
 
 When producing the Markdown design document, extend the type-specific template above with (where applicable for observational studies):
 - A **`## Subgroup / HTE Hypotheses`** section after the identification block — list pre-registered subgroups, or "None". Causal inference is observational; any concurrent prospective rollout should also document **mutual exclusion** and a **ramp plan**.
+- A **`## Next Steps`** section at the very end — adapt the canonical block in [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps). Causal inference is observational, so steps 1–5 (sign-offs / instrumentation / AA / alerts / ramp) do not apply. Replace with: validate identifying assumptions (parallel trends for DiD, RDD continuity / bandwidth, IV exclusion + relevance, balance checks for PSM); run robustness / placebo / sensitivity analyses; produce the analysis with the `experiment-readout` skill (step 8 of the canonical block).
 
 ## JSON Export
 
@@ -221,6 +222,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **This is observational** — no launch / AA test / ramp. **Immediate next:** share with statistician (validate identifying assumptions: parallel trends for DiD, RDD continuity / bandwidth, IV exclusion + relevance, balance checks for PSM), then run robustness / placebo / sensitivity analyses (alternative specifications, leave-one-out, donor pool variations). Produce the analysis with the `experiment-readout` skill. Findings are weaker than RCTs — flag the identifying assumption that would have to fail to invalidate the result.
 
 ## Handling Questions
 

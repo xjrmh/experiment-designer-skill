@@ -193,9 +193,9 @@ Then produce the design document:
 - [ ] Exploration budget sufficient
 
 ## Decision Framework
-- **Ship**: [criteria — winning arm clear]
-- **Iterate**: [criteria — no clear winner, try new arms]
-- **Kill**: [criteria — no improvement over control]
+- **✅ Ship**: [criteria — winning arm clear]
+- **⚠️ Iterate**: [criteria — no clear winner, try new arms]
+- **❌ Kill**: [criteria — no improvement over control]
 ```
 
 ## Common Sections
@@ -211,6 +211,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block. Note: MAB is continuous — there is no fixed ship/iterate/kill or holdback. Replace steps 5–7 with: monitor cumulative regret and winning-arm convergence; periodically retire underperforming arms; refresh exploration budget if upstream traffic drifts.
 
 ## JSON Export
 
@@ -222,6 +223,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM, instrument per-request assignment + reward logging with `experiment_id`, `arm_id`, `request_id`, `reward`, then start the bandit. **MAB is continuous** — no fixed ship/iterate/kill or holdback. Monitor cumulative regret and winning-arm convergence; periodically retire underperforming arms and refresh the exploration budget if upstream traffic drifts. Use the `experiment-readout` skill for periodic regret / convergence reports.
 
 ## Handling Questions
 

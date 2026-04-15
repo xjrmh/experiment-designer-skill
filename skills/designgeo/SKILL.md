@@ -122,9 +122,9 @@ See [statistics.md](../experiment-designer/statistics.md#simulation-based-power)
 [As above]
 
 ### Decision Framework
-- **Ship / scale channel if**: [criteria]
-- **Iterate creative / targeting if**: [criteria]
-- **Kill if**: [criteria]
+- **✅ Ship / scale channel if**: [criteria]
+- **⚠️ Iterate creative / targeting if**: [criteria]
+- **❌ Kill if**: [criteria]
 ```
 
 ## Variance Reduction
@@ -150,6 +150,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block. Note: long-term geo holdouts are rare — usually keep a permanent matched-control set rather than a per-user holdback.
 
 ## JSON Export
 
@@ -161,6 +162,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM (have the statistician verify pre-period match RMSPE and counterfactual fit on a placebo / pre-period window), confirm geo-level delivery channels, then start the test window. Long-term geo holdouts are rare — usually keep a permanent matched control set rather than a per-user holdback. Use the `experiment-readout` skill for the final TBR / synthetic-control / GeoLift readout.
 
 ## Handling Questions
 

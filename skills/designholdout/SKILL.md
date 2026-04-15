@@ -145,9 +145,9 @@ Produce the design document using this template:
 - Novelty-decay check: short-term vs long-term effect comparison
 
 ### Decision Framework
-- **Ship permanently if**: [criteria]
-- **Ramp down if**: [criteria]
-- **Extend if**: [criteria]
+- **✅ Ship permanently if**: [criteria]
+- **📉 Ramp down if**: [criteria]
+- **⏳ Extend if**: [criteria]
 ```
 
 ## Variance Reduction
@@ -167,6 +167,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section — for holdouts, the ramp plan is typically "N/A — holdback maintained at fixed percentage for the full duration".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical block. Note: this design IS the long-term holdback — skip step 7. Replace step 6 with: monitor 30 / 60 / 90-day cohorts; do NOT peek at the primary inside the holdback period; at the planned end, decide Ship-permanently / Ramp-down / Extend.
 
 ## JSON Export
 
@@ -178,6 +179,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **This IS the long-term holdback.** **Immediate next:** share with statistician / engineer / PM, verify the suppression mechanism end-to-end (logout, device change, reinstall, app upgrade), and register the holdout in the experiment registry so downstream experiments can exclude or account for these users. Do NOT peek at the primary metric inside the holdback period. **At the planned end** (30 / 60 / 90-day cohorts): apply the Decision Framework (Ship-permanently / Ramp-down / Extend) and produce the readout with the `experiment-readout` skill — flag novelty decay (early-vs-late lift gap).
 
 ## Handling Questions
 

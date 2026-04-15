@@ -196,9 +196,9 @@ Then produce the design document:
 | [type] | [description] | [value] |
 
 ### Decision Framework
-- **Ship if**: [criteria]
-- **Iterate if**: [criteria]
-- **Kill if**: [criteria]
+- **✅ Ship if**: [criteria]
+- **⚠️ Iterate if**: [criteria]
+- **❌ Kill if**: [criteria]
 ```
 
 ## Common Sections
@@ -214,6 +214,7 @@ When producing the Markdown design document, extend the type-specific template a
 - In the **Randomization** block: `- **Mutual exclusion layer**: [layer / exclusion group, or "none"]`.
 - A **`## Subgroup / HTE Hypotheses`** section after Randomization — list pre-registered subgroups, or "None".
 - A **`## Ramp Plan`** section next — staged rollout with hold durations and auto-halt thresholds, or "Full allocation from day 1".
+- A **`## Next Steps`** section at the very end — see [experiment-designer/SKILL.md](../experiment-designer/SKILL.md#next-steps) for the canonical pre-launch / run / post-launch block.
 
 ## JSON Export
 
@@ -225,6 +226,12 @@ Before launching, have the design reviewed by:
 - [ ] **Statistician** — sample size methodology, statistical approach, multiple testing
 - [ ] **Engineer** — logging infrastructure, randomization implementation, monitoring
 - [ ] **PM / Stakeholder** — metrics alignment, success criteria, business context
+
+## Closing Handoff
+
+After producing the design document, end the chat turn with this brief handoff (don't restate the doc):
+
+> Done — design above. **Immediate next:** share with statistician / engineer / PM (have the statistician confirm the ICC inflation factor and that ≥20 clusters per arm are available), then instrument cluster-level logging and run an AA test before ramping. Analyze with cluster-robust SE or mixed-effects model. **After ship:** run `/designholdout` for long-term effects and the `experiment-readout` skill for the final readout.
 
 ## Handling Questions
 
